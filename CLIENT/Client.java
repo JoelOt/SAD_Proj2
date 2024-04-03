@@ -15,29 +15,37 @@ public class Client {
     public Client(){
         try {
             socket = new Socket("localhost", 5050);
+            ois = new DataInputStream(socket.getInputStream());  //dades d'entrada
+            oos = new DataOutputStream(socket.getOutputStream()); //dades de sortida
+            oos.flush();  //netejem el buffer
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void StartClient(){
-
-        //fluxe de dades:
+    public String rebreDades(){  //rebem dades del server i les mostrem per pantalla
         try{
-            ois = new DataInputStream(socket.getInputStream());  //dades d'entrada
-            oos = new DataOutputStream(socket.getOutputStream()); //dades de sortida
+            return (String)ois.readUTF();    //llegim el missatge del client
         }catch(IOException e){
-            System.out.println("Error al crear els fluxes de dades: "+e.getMessage());
+            System.out.println("Error al rebre dades: "+e.getMessage());
+            return null;
         }
-        
-        //rebre dades:
+    }
+
+    public void enviar(String message){
         try{
-            String message = "";    //missatge rebut que es va completant
-            while(!message.equals("exit")){  //la connexió acaba al rebre "exit"
-                message = (String)ois.readUTF();    //llegim el missatge del client
-                System.out.println(message);
-            }
-            //tancar connexió:
+            //enviar dades:
+            oos.writeUTF(message);  //enviem el missatge al client
+            oos.flush();   //netejem el buffer
+            System.out.println("Client: " + message);
+        }catch(IOException e){
+            System.out.println("Error al enviar dades: "+e.getMessage());
+        }
+    }
+
+
+    public void tancarConnexio(){ 
+        try{
             System.out.println("Client: Connexió tancada");
             ois.close();
             oos.close();
@@ -47,36 +55,41 @@ public class Client {
         }
     }
 
-    public void enviar(String message){
-        try{
-            //enviar dades:
-            oos.writeUTF(message);  //enviem el missatge al client
-            oos.flush();   //netejem el buffer
-        }catch(IOException e){
-            System.out.println("Error al enviar dades: "+e.getMessage());
-        }
+
+    public String readMsg(){  //llegim el que escriu el client i ho enviem al server. modificar per utilitzar bufferedReader
+        return teclado.nextLine();
     }
 
-    public void readMsg(){
-        while (true) {
-            enviar(teclado.nextLine());
-        }
-    }
-
-    public void executarConnexio(){
-        Thread t = new Thread(new Runnable(){
+    public void executarConnexio(){  //executem la connexió amb el server
+        Thread t = new Thread(new Runnable(){            
             public void run(){
-                StartClient();
+                String msg = "";
+                while(!msg.equals("exit")){  //la connexió acaba al rebre "exit"
+                    msg = rebreDades();
+                    System.out.println("Server: " + msg);
+                }
+                tancarConnexio();
             }
         });
         t.start();
     }
 
-    public static void main(String[] args) {
-        Client client = new Client();
-        client.executarConnexio();
-        
-        client.readMsg();
-    }
 
+    public static void main(String[] args) {
+        
+        Client client = new Client();
+        client.executarConnexio();  //rebre dades del server
+        
+        while(true){  //enviar dades al server
+            String inputMsg = client.readMsg();
+            client.enviar(inputMsg);
+        }
+    }
 }
+
+
+/*
+ creo el socket amb la ip del servidor i el port 5050
+ creo els objectes per llegir i escriure dades (dataStream)
+ creo 
+ */

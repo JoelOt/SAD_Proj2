@@ -10,43 +10,46 @@ public class Server {
     private DataOutputStream oos=null; 
 
     public Server(){
-        try {
-            serverSocket = new ServerSocket(5050);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
     
-    public void startServer(){
-
-        //aixecar connexió:
+    }
+    public void iniciarConnexio(){
         try {
-            System.out.println("Server is running...");
             try{
                 socket = serverSocket.accept(); // acceptem la connexió del client
-                System.out.println("Client" + socket.getInetAddress().getHostName() + "connected...");  //client PC-1 connectat
+                System.out.println("Client " + socket.getInetAddress().getHostName() + " connected...");  //client connectat
             }catch(Exception e){
                 System.out.println("Error al conectar: "+e.getMessage());
             }
-
-            //fluxe de dades:
             ois = new DataInputStream(socket.getInputStream());  //dades d'entrada
             oos = new DataOutputStream(socket.getOutputStream()); //dades de sortida
             oos.flush();  //netejem el buffer
 
-            //rebre dades:
-            String message = "";    //missatge rebut que es va completant
-            while(!message.equals("exit")){  //la connexió acaba al rebre "exit"
-                message = (String)ois.readUTF();    //llegim el missatge del client
-                System.out.println(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-                //enviar dades:
-                oos.writeUTF(message);  //enviem el missatge al client
-                oos.flush();   //netejem el buffer
+    public String rebreDades(){  //rebem dades del client i les mostrem per pantalla
+        try{
+            return (String)ois.readUTF();    //llegim el missatge del client
+        }catch(IOException e){
+            System.out.println("Error al rebre dades: "+e.getMessage());
+                return null;
             }
+    }
 
-            //tancar connexió:
-            System.out.println("Server: Connexió tancada");
+    public void enviar(String message){  //ara per ara envia un echo
+        try{
+            oos.writeUTF(message);  //enviem el missatge al client
+            oos.flush();   //netejem el buffer
+            System.out.println("Enviat echo : " + message);
+        }catch(IOException e){
+            System.out.println("Error al enviar dades: "+e.getMessage());
+        }
+    }
+    public void tancarConnexio(){
+        try { 
+            System.out.println("Server : Connexió tancada");
             ois.close();
             oos.close();
             socket.close();
@@ -59,13 +62,30 @@ public class Server {
     public void executarConnexio(){
         Thread t = new Thread(new Runnable(){
             public void run(){
-                startServer();
+                iniciarConnexio();
+                String msg = "";
+                while(!msg.equals("exit")){  //la connexió acaba al rebre "exit"
+                    msg = rebreDades();
+                    System.out.println("Rebut de " + socket.getInetAddress().getHostName() + ": " + msg);
+                    enviar(msg);  //enviem echo
+                }
+                tancarConnexio();
             }
         });t.start();
     }
     
     public static void main(String[] args) {
         Server server = new Server();
-        server.executarConnexio();
+        try{
+        server.serverSocket = new ServerSocket(Integer.parseInt(args[0]));
+        System.out.println("Server is running...");
+        }catch(Exception e){
+            System.out.println("Error al crear el socket: "+e.getMessage());
+        }
+
+        server.executarConnexio();  //rebre dades del client
     }
 }
+
+
+//passar args desde terminal: MyServerSoccket ss = new MyServerSoccket(Integer.parseInt(args[0]));
