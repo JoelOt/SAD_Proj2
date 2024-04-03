@@ -6,8 +6,8 @@ import java.io.*;
 public class Server {
     private Socket socket;
     private ServerSocket serverSocket;
-    private DataInputStream ois=null;
-    private DataOutputStream oos=null; 
+    private DataInputStream dataInput=null;
+    private DataOutputStream dataOutput=null; 
 
     public Server(){
     
@@ -20,9 +20,9 @@ public class Server {
             }catch(Exception e){
                 System.out.println("Error al conectar: "+e.getMessage());
             }
-            ois = new DataInputStream(socket.getInputStream());  //dades d'entrada
-            oos = new DataOutputStream(socket.getOutputStream()); //dades de sortida
-            oos.flush();  //netejem el buffer
+            dataInput = new DataInputStream(socket.getInputStream());  //dades d'entrada
+            dataOutput = new DataOutputStream(socket.getOutputStream()); //dades de sortida
+            dataOutput.flush();  //netejem el buffer
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -31,7 +31,7 @@ public class Server {
 
     public String rebreDades(){  //rebem dades del client i les mostrem per pantalla
         try{
-            return (String)ois.readUTF();    //llegim el missatge del client
+            return (String)dataInput.readUTF();    //llegim el missatge del client
         }catch(IOException e){
             System.out.println("Error al rebre dades: "+e.getMessage());
                 return null;
@@ -40,8 +40,8 @@ public class Server {
 
     public void enviar(String message){  //ara per ara envia un echo
         try{
-            oos.writeUTF(message);  //enviem el missatge al client
-            oos.flush();   //netejem el buffer
+            dataOutput.writeUTF(message);  //enviem el missatge al client
+            dataOutput.flush();   //netejem el buffer
             System.out.println("Enviat echo : " + message);
         }catch(IOException e){
             System.out.println("Error al enviar dades: "+e.getMessage());
@@ -50,8 +50,8 @@ public class Server {
     public void tancarConnexio(){
         try { 
             System.out.println("Server : Connexió tancada");
-            ois.close();
-            oos.close();
+            dataInput.close();
+            dataOutput.close();
             socket.close();
             serverSocket.close();
         } catch (Exception e) {
