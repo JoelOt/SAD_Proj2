@@ -13,9 +13,9 @@ public class MySocket extends Socket {
         super();
         try {
             super.connect(new InetSocketAddress(host, port));
-            InputStream input = super.getInputStream();
+            this.input = super.getInputStream();
             bufferedReader = new BufferedReader(new InputStreamReader(input));
-            OutputStream output = super.getOutputStream();
+            this.output = super.getOutputStream();
             printWriter = new PrintWriter(output, true);
         } catch (Exception e) { 
             System.out.println("Error connecting to " + host + ":" + port);
@@ -37,11 +37,8 @@ public class MySocket extends Socket {
 
     public String receiveMessage(){
         try {
-            if(this.bufferedReader != null){
-            String msg = bufferedReader.readLine();
-            return msg;
-            }
-            return null;
+            System.out.println("    - Esperant msg...");
+            return bufferedReader.readLine();
         } catch (IOException e) {
            System.out.println("Error receiving message : " + e.getMessage());
            return null;
@@ -68,6 +65,7 @@ public class MySocket extends Socket {
                 printWriter = null;
             }
             super.close();
+            System.out.println("Socket closed");
         } catch(Exception e) {
             System.out.println("error closing Socket");
         }

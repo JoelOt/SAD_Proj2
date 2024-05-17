@@ -18,11 +18,10 @@ public class MyServerSocket extends ServerSocket {
         }
     }
     @Override
-    public Socket accept() {
+    public MySocket accept() {
         try {
             socket = super.accept();
             MySocket mySocket = new MySocket(socket, socket.getInputStream(), socket.getOutputStream());
-            
             System.out.println("Client " + " connected..." + socket.getInetAddress()); // client connectat
             return mySocket;
         } catch (Exception e) {
@@ -32,7 +31,7 @@ public class MyServerSocket extends ServerSocket {
         return null;
     }
 
-    public String receiveMessage() throws IOException {
+    public String receiveMessage(){
         try {
             String msg = bufferedReader.readLine();
             return msg;
