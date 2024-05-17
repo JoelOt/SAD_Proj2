@@ -2,32 +2,34 @@ package SERVER;
 
 import java.io.*;
 import java.net.*;
+import CLIENT.MySocket;
 
 public class MyServerSocket extends ServerSocket {
     private Socket socket;
     private BufferedReader bufferedReader;
     private PrintWriter printWriter;
 
-    public MyServerSocket(int port) throws IOException{
+    public MyServerSocket(int port) throws IOException {
         super(port);
-        accept();
-        executarConnexio();
-        try{
-            
-        }catch(Exception e){
+        try {
+
+        } catch (Exception e) {
             System.out.println("Error creating server socket");
         }
     }
-
     @Override
-    public Socket accept() throws IOException {
-        socket = super.accept();
-        System.out.println("Client " + socket.getInetAddress().getHostName() + " connected...");  //client connectat
-        InputStream input = socket.getInputStream();
-        bufferedReader = new BufferedReader(new InputStreamReader(input));
-        OutputStream output = socket.getOutputStream();
-        printWriter = new PrintWriter(output, true);
-        return socket;
+    public Socket accept() {
+        try {
+            socket = super.accept();
+            MySocket mySocket = new MySocket(socket, socket.getInputStream(), socket.getOutputStream());
+            
+            System.out.println("Client " + " connected..." + socket.getInetAddress()); // client connectat
+            return mySocket;
+        } catch (Exception e) {
+            System.out.println("Error accepting client connection");
+        }
+        System.out.println("Client not accepted");
+        return null;
     }
 
     public String receiveMessage() throws IOException {
@@ -35,8 +37,8 @@ public class MyServerSocket extends ServerSocket {
             String msg = bufferedReader.readLine();
             return msg;
         } catch (IOException e) {
-           System.out.println("Error receiving message");
-           return null;
+            System.out.println("Serv: Error receiving message" + e.getMessage());
+            return null;
         }
     }
 
@@ -49,36 +51,20 @@ public class MyServerSocket extends ServerSocket {
         }
     }
 
-    public void close() throws IOException {
+    public void close() {
         try {
             if (bufferedReader != null) {
                 bufferedReader.close();
                 bufferedReader = null;
             }
-        } finally {
             if (printWriter != null) {
                 printWriter.close();
                 printWriter = null;
             }
             super.close();
+        } catch (Exception e) {
+            System.out.println("Error closing server socket");
         }
     }
 
-    public void executarConnexio(){
-        Thread t = new Thread(new Runnable() {
-            public void run() {
-                String msg = "";
-                while (msg != null) {
-                    try{    
-                    msg = receiveMessage();
-                    System.out.println("Rebut de " + socket.getInetAddress().getHostName() + ": " + msg);
-                    sendMessage(msg);
-                    } catch (Exception e) {
-                        System.out.println("Error receiving message");
-                    }
-                }
-            }
-        });
-        t.start();
-    }
 }
